@@ -48,3 +48,14 @@ func main() {
 	// 启动server
 	s.Serve()
 }
+
+/*
+只能给一个Server 添加一个 Router
+*/
+/*
+1. 创建server句柄
+2. 添加一个自定义的router
+3. 启动server
+需要继承BaseRouter
+实现PreHandle， Handle，PostHandle
+*/
