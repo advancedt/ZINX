@@ -1,2 +1,2 @@
 # ZINX
-A TCP server framework
+A TCP Server Framework

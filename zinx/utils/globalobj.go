@@ -45,7 +45,7 @@ func init() {
 	// 如果配置文件没有加载的默认值
 	GlobalObject = &GlobalObj{
 		Name:           "ZinxServerApp",
-		Version:        "V0.5",
+		Version:        "V0.6",
 		TcpPort:        8999,
 		Host:           "0.0.0.0",
 		MaxConn:        1000,
