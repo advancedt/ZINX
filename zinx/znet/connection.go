@@ -1,6 +1,7 @@
 package znet
 
 import (
+	"ZINX/zinx/utils"
 	"ZINX/zinx/ziface"
 	"errors"
 	"fmt"
@@ -22,7 +23,7 @@ type Connection struct {
 	// 告知当前连接已经退出/停止 channel (由Reader告诉Writer退出)
 	ExitChan chan bool
 
-	// 无缓冲的管道，用于读写GoRoutine 之间的消息通信
+	// 无缓冲的管道，用于读/写GoRoutine 之间的消息通信
 	msgChan chan []byte
 
 	// 消息的管理msgID和对应的处理业务API
@@ -92,9 +93,15 @@ func (c *Connection) StartReader() {
 			conn: c,
 			msg:  msg,
 		}
-		// 从路由中，找到注册绑定的Conn对应的Router调用
-		// 根据绑定好的msgID找到对应业务处理api业务的执行
-		go c.MsgHandler.DoMsgHandler(&req)
+		// 已经开启工作池机制
+		if utils.GlobalObject.WorkerPoolSize > 0 {
+			// 将消息发送给Worker工作池处理即可
+			c.MsgHandler.SendMsgToTaskQueue(&req)
+		} else {
+			// 从路由中，找到注册绑定的Conn对应的Router调用
+			// 根据绑定好的msgID找到对应业务处理api业务的执行
+			go c.MsgHandler.DoMsgHandler(&req)
+		}
 
 	}
 }
@@ -102,7 +109,7 @@ func (c *Connection) StartReader() {
 // 写消息，专门发送给客户端消息的模块
 func (c *Connection) StartWriter() {
 	fmt.Println("[Writer GoRoutine is Running]")
-	defer fmt.Println(c.RemoteAddr().String(), "[coon write exit]")
+	defer fmt.Println(c.RemoteAddr().String(), "[conn write exit]")
 
 	//  不断的阻塞的等待channel的消息,写给客户端
 	for {
@@ -175,6 +182,7 @@ func (c *Connection) SendMsg(msgId uint32, data []byte) error {
 		fmt.Println("Pack error, msg id = ", msgId)
 		return errors.New("Pack error msg")
 	}
+	// 数据发送给Chan
 	c.msgChan <- binaryMsg
 	return nil
 }
